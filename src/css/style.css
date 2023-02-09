@@ -1,0 +1,33 @@
+.container {
+    width: 95vw;
+    margin: 0 auto;
+    padding: 10px;
+}
+
+.search-form {
+    padding: 20px 0 20px 0;
+    display: flex;
+    justify-content: center;
+
+    background-color: aquamarine;
+}
+
+.gallery {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.photo-card {
+    display: flex;
+    flex-wrap: wrap;
+    flex-basis: 31%;
+    margin: 5px;
+    padding: 5px;
+    border: 1px solid black;
+    border-radius: 9px;
+}
+
+img {
+    display: block;
+    width: 100%;
+}

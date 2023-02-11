@@ -1,29 +1,30 @@
-import { findeUserRequest, requestData } from './script/fetch.js';
 import Notiflix from 'notiflix';
+import { findeUserRequest, requestData } from './script/fetch.js';
+let throttle = require('lodash.throttle');
 
 const refs = {
   formEl: document.querySelector('#search-form'),
   inputEl: document.querySelector('#search-form > input'),
-  formBtn: document.querySelector('#search-form > button'),
   galleryEl: document.querySelector('.gallery'),
-  loadingBtn: document.querySelector('.load-more'),
 };
 
-refs.formEl.addEventListener('submit', readInput);
-refs.loadingBtn.addEventListener('click', readInput);
+refs.formEl.addEventListener('submit', searchImages);
 
-refs.loadingBtn.hidden = true;
-
-async function readInput(event) {
+async function searchImages(event) {
   event.preventDefault();
 
   const inputValue = refs.inputEl.value.trim();
 
   if (requestData.word !== inputValue) resetGallery();
+  if (requestData.word === inputValue) {
+    return;
+  }
 
   requestData.word = inputValue;
 
   const dataImg = await findeUserRequest(inputValue);
+
+  infinityScroll();
 
   if (dataImg.data.totalHits === 0) {
     Notiflix.Notify.failure(
@@ -32,26 +33,26 @@ async function readInput(event) {
     return;
   }
 
-  if (requestData.firstVisit) {
-    Notiflix.Notify.success(
-      `Hooray! We found ${dataImg.data.totalHits} images.`
-    );
-    requestData.firstVisit = false;
-  }
+  Notiflix.Notify.success(`Hooray! We found ${dataImg.data.totalHits} images.`);
 
-  refs.galleryEl.insertAdjacentHTML('beforeend', creatMarcup(dataImg));
+  creatMarcup(dataImg);
 
-  refs.loadingBtn.hidden = false;
-  requestData.page += 1;
   requestData.imgCount += dataImg.data.hits.length;
+}
 
-  console.log(requestData);
+async function onLoadMore() {
+  requestData.page += 1;
+
+  const dataImg = await findeUserRequest(requestData.word);
+  creatMarcup(dataImg);
+
+  requestData.imgCount += dataImg.data.hits.length;
 
   if (requestData.imgCount >= dataImg.data.totalHits) {
     Notiflix.Notify.info(
       "We're sorry, but you've reached the end of search results."
     );
-    refs.loadingBtn.hidden = true;
+    removeinfinityScroll();
   }
 }
 
@@ -78,16 +79,36 @@ function creatMarcup({ data: { hits } }) {
 </div>`
     )
     .join('');
+  refs.galleryEl.insertAdjacentHTML('beforeend', imgCard);
 
   // console.log(imgCard);
-  return imgCard;
+  // return imgCard;
 }
 
 function resetGallery() {
   refs.galleryEl.innerHTML = '';
   requestData.page = 1;
   requestData.imgCount = 0;
-  requestData.firstVisit = true;
+}
 
-  refs.loadingBtn.hidden = true;
+async function checkPosition() {
+  const height = document.body.offsetHeight;
+  const screenHeight = window.innerHeight;
+  const scrolled = window.scrollY;
+  const treshhold = height - screenHeight / 6;
+  const position = scrolled + screenHeight;
+
+  if (position >= treshhold) {
+    onLoadMore();
+  }
+}
+
+const throttleChekPosition = throttle(() => checkPosition(), 250);
+
+function infinityScroll() {
+  window.addEventListener('scroll', throttleChekPosition);
+}
+
+function removeinfinityScroll() {
+  window.removeEventListener('scroll', throttleChekPosition);
 }

@@ -229,3 +229,9 @@ img {
     margin-top: 10px;
 
 }
+
+
+.photo-card_link {
+    display: block;
+    text-decoration: none;
+}

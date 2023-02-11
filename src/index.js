@@ -1,6 +1,11 @@
 import Notiflix from 'notiflix';
 import { findeUserRequest, requestData } from './script/fetch.js';
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
+
 let throttle = require('lodash.throttle');
+
+let lightbox = new SimpleLightbox('.gallery a', {});
 
 const refs = {
   formEl: document.querySelector('#search-form'),
@@ -61,7 +66,9 @@ function creatMarcup({ data: { hits } }) {
     .map(
       img =>
         `<div class="photo-card">
-  <img src="${img.webformatURL}" alt="${img.tags}" loading="lazy" />
+    <a href="${img.largeImageURL}" class='photo-card_link'>
+      <img src="${img.webformatURL}" alt="${img.tags}" loading="lazy"/>
+    </a>
   <div class="info">
     <p class="info-item">
       <b>Likes:${img.likes}</b>
@@ -79,10 +86,10 @@ function creatMarcup({ data: { hits } }) {
 </div>`
     )
     .join('');
+
   refs.galleryEl.insertAdjacentHTML('beforeend', imgCard);
 
-  // console.log(imgCard);
-  // return imgCard;
+  lightbox.refresh();
 }
 
 function resetGallery() {
@@ -95,7 +102,7 @@ async function checkPosition() {
   const height = document.body.offsetHeight;
   const screenHeight = window.innerHeight;
   const scrolled = window.scrollY;
-  const treshhold = height - screenHeight / 6;
+  const treshhold = height - screenHeight;
   const position = scrolled + screenHeight;
 
   if (position >= treshhold) {
